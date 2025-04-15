@@ -1,9 +1,8 @@
 ---
 title: "Vocal efficiency in crows"
 author:
-  name: Mason Youngblood
-  email: masonyoungblood@gmail.com
-  affiliation: Institute for Advanced Computational Science, Stony Brook University
+  - Claudia Wascher, Anglia Ruskin University, claudia.wascher@gmail.com
+  - Mason Youngblood, Stony Brook University, masonyoungblood@gmail.com
 output:
   bookdown::html_document2:
     theme: cosmo
@@ -16,6 +15,10 @@ output:
 
 <br>![](imgs/20091222_5606.jpeg)
 &copy; Claudia Wascher
+
+# Links {-}
+
+* [GitHub repository](https://github.com/masonyoungblood/crow_efficiency)
 
 # Data {-}
 

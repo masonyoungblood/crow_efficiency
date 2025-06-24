@@ -284,6 +284,63 @@ flextable::flextable(menz_table_hybrid) %>%
 
 # Individual Variation {-}
 
+Investigate individual variation, including plots of interaction effects.
+
+```{r, eval = FALSE, message = FALSE, warning = FALSE}
+#load libraries
+library(ggeffects)
+library(ggplot2)
+
+#get marginal predictions for different ages
+predictions <- ggpredict(ind_var_models$inter_b, c("length", "age [1, 3, 5, 7]"), back_transform = FALSE)
+predictions$predicted <- exp((predictions$predicted*sd(log(data$duration))) + mean(log(data$duration)))
+predictions$conf.low <- exp((predictions$conf.low*sd(log(data$duration))) + mean(log(data$duration)))
+predictions$conf.high <- exp((predictions$conf.high*sd(log(data$duration))) + mean(log(data$duration)))
+
+#construct age effect plot
+age_effect <- predictions %>% plot(line_size = 0.5)
+colors <- c("#0072B2", "#D55E00", "#009E73", "#CC79A7", "#BDB10F", "#38A6E5", "#E09900")
+age_effect <- age_effect + 
+  ggtitle("Carrion Crows: Age Effect") + 
+  scale_colour_manual(values = colors[1:4]) + 
+  scale_fill_manual(values = colors[1:4]) + 
+  scale_x_continuous(breaks = 2:max(avg_data$length)) + 
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 6)) + 
+  labs(colour = "Age") + xlab("# of Calls in Sequence") + ylab("Median Call Duration (s)") + 
+  theme_linedraw(base_size = 8, base_family = "Avenir")
+age_effect$layers[[2]]$show.legend <- FALSE
+age_effect$layers[[1]]$aes_params$linewidth <- 0.5
+
+#get marginal predictions for different sexes
+predictions <- ggpredict(ind_var_models$inter_b, c("length", "sex"), back_transform = FALSE)
+predictions$predicted <- exp((predictions$predicted*sd(log(data$duration))) + mean(log(data$duration)))
+predictions$conf.low <- exp((predictions$conf.low*sd(log(data$duration))) + mean(log(data$duration)))
+predictions$conf.high <- exp((predictions$conf.high*sd(log(data$duration))) + mean(log(data$duration)))
+
+#construct age effect plot
+sex_effect <- predictions %>% plot(line_size = 0.5)
+colors <- c("#0072B2", "#D55E00", "#009E73", "#CC79A7", "#BDB10F", "#38A6E5", "#E09900")
+sex_effect <- sex_effect + 
+  ggtitle("Carrion Crows: Sex Effect") + 
+  scale_colour_manual(values = colors[1:2], labels = c("F", "M")) + 
+  scale_fill_manual(values = colors[1:2], labels = c("F", "M")) + 
+  scale_x_continuous(breaks = 2:max(avg_data$length)) + 
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 6)) +
+  labs(colour = "Sex") + xlab("# of Calls in Sequence") + ylab("Median Call Duration (s)") + 
+  theme_linedraw(base_size = 8, base_family = "Avenir")
+sex_effect$layers[[2]]$show.legend <- FALSE
+sex_effect$layers[[1]]$aes_params$linewidth <- 0.5
+
+#save plot
+png("plots/interact_plot.png", width = 6, height = 4, units = "in", res = 600)
+cowplot::plot_grid(
+  cowplot::plot_grid(age_effect, ggplot(NULL) + theme_void(), rel_widths = c(1, 0)) + cowplot::draw_image("imgs/Carrion_crow.png", x = 0.737, y = 0.65, height = 0.2, width = 0.2),
+  cowplot::plot_grid(sex_effect, ggplot(NULL) + theme_void(), rel_widths = c(1, 0)) + cowplot::draw_image("imgs/Carrion_crow.png", x = 0.737, y = 0.65, height = 0.2, width = 0.2),
+  nrow = 2
+)
+invisible(dev.off())
+```
+
 ```{r ind-var, message = FALSE, warning = FALSE}
 aic_table <- as.data.frame(AIC(ind_var_models$base, ind_var_models$inter_a, ind_var_models$inter_b))
 aic_table$AIC <- round(aic_table$AIC)
@@ -291,6 +348,11 @@ aic_table <- cbind(Model = c("No Interactions", "Simple Interactions", "Complex 
 flextable::flextable(aic_table) %>% 
   flextable::set_caption("Comparison of models of individual variation.", autonum = officer::run_autonum()) %>%
   flextable::theme_vanilla() %>% flextable::set_table_properties(layout = "autofit")
+```
+
+```{r lrt, message = FALSE, warning = FALSE}
+p_values <- c(anova(ind_var_models$base, ind_var_models$inter_a)$`Pr(>Chisq)`[2], anova(ind_var_models$inter_a, ind_var_models$inter_b)$`Pr(>Chisq)`[2])
+p_values
 ```
 
 ```{r ind-var-table, message = FALSE, warning = FALSE}
@@ -306,4 +368,8 @@ flextable::flextable(ind_var_table) %>%
 
 ```{r sex-plot, message = FALSE, warning = FALSE, echo = FALSE, fig.align = "center", out.width = "80%", fig.cap = "The distribution of element durations and sequence lengths (left) and the slope of Menzerath's law (right), for female and male carrion crows. The bars in the slope plot (right) mark the 95% confidence intervals around the point estimates."}
 knitr::include_graphics("plots/sex_plot.png")
+```
+
+```{r interact-plot, message = FALSE, warning = FALSE, echo = FALSE, fig.align = "center", out.width = "80%", fig.cap = "The predicted relationship between element durations and sequence lengths for different levels of age (top) and sex (bottom), from the fitted version of INSERT MODEL."}
+knitr::include_graphics("plots/interact_plot.png")
 ```
